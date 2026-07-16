@@ -52,6 +52,33 @@ export function hexBlock(bytes: Uint8Array, other?: Uint8Array): HTMLElement {
   return box
 }
 
+/** Compare bytes to `other`, highlighting either the matching or the changed bytes in a
+ *  calm (non-alarm) tone. Used by the clone panel, where "same" is the teaching point and
+ *  "diverged" is the desirable outcome — so neither should read as danger-red. */
+export function compareHexBlock(
+  bytes: Uint8Array,
+  other: Uint8Array,
+  mode: 'match' | 'diff',
+): HTMLElement {
+  const box = el('div', { class: 'hexblock' })
+  const hex = bytesToHex(bytes)
+  for (let i = 0; i < bytes.length; i++) {
+    const pair = hex.slice(i * 2, i * 2 + 2)
+    const equal = other[i] === bytes[i]
+    const hit = mode === 'match' ? equal : !equal
+    const cls = mode === 'match' ? 'byte-same' : 'byte-chg'
+    box.append(el('span', hit ? { class: cls } : {}, [pair]))
+    box.append(document.createTextNode(' '))
+  }
+  return box
+}
+
+/** Short "a1b2c3d4e5f6…" preview of a byte array, for state chips. */
+export function abbrevHex(bytes: Uint8Array, headBytes = 6): string {
+  const hex = bytesToHex(bytes.subarray(0, headBytes))
+  return groupHex(hex) + (bytes.length > headBytes ? ' …' : '')
+}
+
 export interface IndicatorSpec {
   label: string
   icon: string

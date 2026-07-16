@@ -142,15 +142,33 @@ export function entropyPanel(): HTMLElement {
   const result = el('div', { role: 'status', 'aria-live': 'polite' }, [])
   panel.append(result)
 
+  function humanScale(bits: number): string {
+    if (bits >= 200) return 'more seeds than there are atoms in the observable universe'
+    if (bits >= 100) return 'unreachable by any computer that could ever be built'
+    if (bits >= 64) return 'beyond practical brute force'
+    if (bits >= 40) return 'years of dedicated compute to sweep'
+    if (bits >= 24) return 'minutes to hours on one laptop'
+    return 'a sweep you can watch finish in this browser tab'
+  }
+
   function renderReadout(): void {
     clear(readout)
     const stop = ENTROPY_STOPS[stopIndex]
+    const fill = Math.max(2, Math.round((stop.bits / 256) * 100))
     readout.append(
       el('p', {}, [
         el('span', { class: 'ks-figure' }, [keyspaceLabel(stop.bits)]),
         '  possible seeds',
       ]),
-      el('p', { style: 'margin:.25rem 0 0;color:var(--text-dim)' }, [stop.label]),
+      el('div', { class: 'ks-meter', role: 'presentation' }, [
+        el('span', { style: `width:${fill}%` }),
+      ]),
+      el('p', { style: 'margin:.3rem 0 0;color:var(--text-dim)' }, [
+        stop.label,
+        ' — ',
+        el('em', {}, [humanScale(stop.bits)]),
+        '.',
+      ]),
     )
     if (stop.full) {
       readout.append(
@@ -247,48 +265,69 @@ export function entropyPanel(): HTMLElement {
     const total = 1 << victim.bits
     const bar = el('span', {}) as HTMLElement
     const progress = el('div', { class: 'progress', role: 'presentation' }, [bar])
+    const ticker = el('div', { class: 'ticker', 'aria-hidden': 'true' }, ['booting candidate machines…'])
     const pctLabel = el('p', { class: 'result-line', role: 'status', 'aria-live': 'polite' }, [
       'Enumerating candidate seeds…',
     ])
-    progressWrap.append(pctLabel, progress)
+    progressWrap.append(pctLabel, progress, ticker)
 
     let from = 0
-    const batch = 2048
+    const batch = 1024
     const t0 = performance.now()
     // Chunked sweep so the UI stays responsive; each batch runs the REAL DRBG.
-    // eslint-disable-next-line no-constant-condition
     while (from < total && !cancel) {
       const res = recoverBatch(victim.nonce, model, from, batch)
-      from += res.tried
-      const pct = Math.min(100, Math.round((from / total) * 100))
-      bar.style.width = pct + '%'
-      pctLabel.textContent = `Tried ${from.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} seeds (${pct}%)…`
 
       if (res.found) {
         const secs = (performance.now() - t0) / 1000
         bar.style.width = '100%'
-        renderSuccess(res.seed!, res.sessionKey!, from, secs)
+        ticker.textContent = ''
+        renderSuccess(res.seed!, res.sessionKey!, res.secretIndex, from + res.tried, secs)
         running = false
         updateButtons()
         return
       }
+
+      from += res.tried
+      const pct = Math.min(100, Math.round((from / total) * 100))
+      const secs = (performance.now() - t0) / 1000
+      const rate = secs > 0 ? Math.round(from / secs) : 0
+      bar.style.width = pct + '%'
+      // Show the actual (boot-time, PID) the attacker is currently trying — the sweep is
+      // literally rebooting the machine with every possible clock/PID until one matches.
+      const { timeOffset, pid } = decodeSecret(from, victim.bits)
+      const t = new Date((BASE_TIME + timeOffset) * 1000).toISOString().slice(11, 19)
+      ticker.textContent = `trying boot @ ${t}, PID ${pid}`
+      pctLabel.textContent =
+        `Tried ${from.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} seeds ` +
+        `(${pct}%) · ~${rate.toLocaleString('en-US')} candidate generators/sec…`
       await new Promise((r) => setTimeout(r, 0))
     }
 
     running = false
     updateButtons()
-    if (cancel) pctLabel.textContent = 'Recovery cancelled.'
+    if (cancel) {
+      pctLabel.textContent = 'Recovery cancelled.'
+      ticker.textContent = ''
+    }
   }
 
   function renderSuccess(
     seed: Uint8Array,
     sessionKey: Uint8Array,
+    secretIndex: number,
     tried: number,
     secs: number,
   ): void {
     clear(result)
     const correct = bytesToHex(sessionKey) === bytesToHex(victim.sessionKey)
+    const { timeOffset, pid } = decodeSecret(secretIndex, victim.bits)
+    const bootDate = new Date((BASE_TIME + timeOffset) * 1000).toISOString().replace('.000Z', 'Z')
     result.append(
+      el('div', { class: 'cracked' }, [
+        el('span', { class: 'cracked-tag', 'aria-hidden': 'true' }, ['🔓 SEED CRACKED']),
+        el('span', {}, [`This machine booted at ${bootDate} as PID ${pid}.`]),
+      ]),
       el('p', { class: 'result-line' }, [
         `Recovered the seed after ${tried.toLocaleString('en-US')} guesses in ${secs.toFixed(2)}s. ` +
           'The real DRBG, re-seeded with it, reproduces the published nonce exactly.',

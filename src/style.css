@@ -571,6 +571,140 @@ details.disclosure li {
   color: var(--accent-text);
 }
 
+/* ---------- Clone panel: two machine cards stepping in lockstep ---------- */
+.machines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+  margin: 0.4rem 0 1rem;
+}
+@media (max-width: 640px) {
+  .machines {
+    grid-template-columns: 1fr;
+  }
+}
+.machine {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: var(--panel-2);
+  padding: 0.8rem 0.9rem 0.9rem;
+}
+.machine-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.machine-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.machine-glyph {
+  font-size: 1.15rem;
+}
+.sync-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.sync-badge[data-sync='same'] {
+  color: var(--danger-text);
+  border-color: var(--danger);
+  background-color: color-mix(in oklab, var(--danger) 14%, transparent);
+}
+.sync-badge[data-sync='diff'] {
+  color: var(--ok-text);
+  border-color: var(--ok);
+  background-color: color-mix(in oklab, var(--ok) 14%, transparent);
+}
+.machine-state {
+  display: flex;
+  gap: 1rem;
+  margin: 0.6rem 0;
+  flex-wrap: wrap;
+}
+.machine-state .sk {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-text);
+  margin-right: 0.35rem;
+  letter-spacing: 0.08em;
+}
+.state-hex {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.state-hex.diverged {
+  color: var(--ok-text);
+}
+.machine-log {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+  min-height: 2rem;
+}
+.log-row {
+  margin-bottom: 0.5rem;
+}
+.log-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+.byte-same {
+  background-color: color-mix(in oklab, var(--info-text) 26%, transparent);
+  border-radius: 3px;
+}
+.byte-chg {
+  background-color: color-mix(in oklab, var(--accent) 32%, transparent);
+  border-radius: 3px;
+}
+
+/* ---------- Entropy panel: collapse meter, live ticker, cracked banner ---------- */
+.ks-meter {
+  height: 12px;
+  background-color: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.5rem 0 0;
+}
+.ks-meter > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-text));
+}
+.ticker {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--accent-text);
+  margin-top: 0.4rem;
+  min-height: 1.2rem;
+}
+.cracked {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border: 1px solid var(--danger);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background-color: color-mix(in oklab, var(--danger) 16%, transparent);
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.7rem;
+  color: var(--text);
+}
+.cracked-tag {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--danger-text);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
