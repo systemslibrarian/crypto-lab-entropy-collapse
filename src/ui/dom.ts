@@ -116,6 +116,22 @@ export function indicatorPair(
   return wrap
 }
 
+/** A compact "cause → consequence" strip: the at-a-glance causal chain for a panel. */
+export function consequenceStrip(items: [string, string][]): HTMLElement {
+  return el(
+    'div',
+    { class: 'cons-strip', role: 'note', 'aria-label': 'What this causes' },
+    items.map(([from, to]) =>
+      el('span', { class: 'cons-item' }, [
+        el('b', {}, [from]),
+        el('span', { class: 'cons-arrow', 'aria-hidden': 'true' }, [' → ']),
+        el('span', { class: 'visually-hidden' }, [' causes ']),
+        to,
+      ]),
+    ),
+  )
+}
+
 /** A collapsible "for the expert" disclosure block (progressive disclosure). */
 export function disclosure(summary: string, ...body: Child[]): HTMLElement {
   return el('details', { class: 'disclosure' }, [el('summary', {}, [summary]), ...body])

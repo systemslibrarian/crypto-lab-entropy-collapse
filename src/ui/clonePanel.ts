@@ -6,7 +6,17 @@
 import { HmacDrbg } from '../crypto/hmac_drbg'
 import { bytesToHex } from '../crypto/hex'
 import { DEFAULT_SCRIPT } from '../model/clone'
-import { clear, compareHexBlock, disclosure, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
+import {
+  clear,
+  compareHexBlock,
+  consequenceStrip,
+  disclosure,
+  el,
+  hexBlock,
+  indicatorPair,
+  notThis,
+  randomBytes,
+} from './dom'
 import { stateCard } from './machine'
 import { SIBLINGS } from './links'
 
@@ -29,11 +39,16 @@ export function clonePanel(): HTMLElement {
     el('span', { class: 'panel-kicker' }, ['Chapter 1 · The headline']),
     el('h2', {}, ['Clone the machine, clone every secret']),
     el('p', { class: 'panel-lede' }, [
-      'One virtual machine is running. Freeze it, restore the image onto two servers, and step ' +
-        'them together. Watch the internal generator state (K, V) load identically, then watch every ' +
-        'nonce and key drop in lockstep — not similar, identical, forever.',
+      'Restore one machine’s DRBG snapshot onto two servers and step them together: same state in, ' +
+        'same nonces and keys out — byte-identical, forever.',
     ]),
   ])
+  panel.append(
+    consequenceStrip([
+      ['same session key', 'decrypt everything both machines send'],
+      ['same nonce', 'recover the ECDSA signing key'],
+    ]),
+  )
 
   const machineA = stateCard('Server A', '🖥', 'Server A output')
   const machineB = stateCard('Server B', '🖥', 'Server B output')

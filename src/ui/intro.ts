@@ -3,6 +3,8 @@
 import { el, disclosure } from './dom'
 import { SIBLINGS } from './links'
 
+const REPO = 'https://github.com/systemslibrarian/crypto-lab-entropy-collapse'
+
 export function hero(): HTMLElement {
   return el('header', { class: 'cl-hero' }, [
     el('div', { class: 'cl-hero-main' }, [
@@ -11,6 +13,26 @@ export function hero(): HTMLElement {
       el('p', { class: 'cl-hero-desc' }, [
         'Snapshot one machine’s real HMAC_DRBG, restore it onto two, and watch both emit identical ' +
           'nonces and keys — then drain a seed’s entropy and brute-force the key the generator kept secret.',
+      ]),
+      el('div', { class: 'cl-hero-actions' }, [
+        el('button', { id: 'start-tour', class: 'action cta', type: 'button' }, [
+          '▶  Run the collapse',
+          el('span', { class: 'cta-sub' }, ['60-second guided tour']),
+        ]),
+      ]),
+      el('div', { class: 'trust-row', role: 'list', 'aria-label': 'Verification' }, [
+        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}#build--verify` }, [
+          el('span', { 'aria-hidden': 'true' }, ['✓ ']),
+          '34 tests passing',
+        ]),
+        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}/blob/main/src/crypto/nist_drbg_vectors.ts` }, [
+          el('span', { 'aria-hidden': 'true' }, ['✓ ']),
+          'NIST + RFC vectors',
+        ]),
+        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}#build--verify` }, [
+          el('span', { 'aria-hidden': 'true' }, ['✓ ']),
+          'WCAG AA checked',
+        ]),
       ]),
     ]),
     el('aside', { class: 'cl-hero-why', 'aria-label': 'Why it matters' }, [
@@ -25,21 +47,20 @@ export function hero(): HTMLElement {
 }
 
 export function throughLine(): HTMLElement {
+  const item = (href: string, label: string, rest: string) =>
+    el('li', {}, [el('a', { class: 'chapter-link', href }, [el('b', {}, [label])]), ' — ' + rest])
   return el('section', { class: 'throughline' }, [
     el('h2', {}, ['One root cause, five ways to see it']),
     el('p', {}, [
       'Every panel below is the same real generator, unmodified. Nothing here attacks the DRBG — ' +
-        'each chapter just changes what happens to its seed:',
+        'each chapter just changes what happens to its seed. Jump to any of them:',
     ]),
-    el('ol', {}, [
-      el('li', {}, [el('b', {}, ['Clone']), ' — one seed, copied onto two machines: identical secrets.']),
-      el('li', {}, [el('b', {}, ['Fork']), ' — one seed, inherited by a child that forgot to reseed.']),
-      el('li', {}, [
-        el('b', {}, ['Starve']),
-        ' — one seed with almost no entropy, guessed by brute force.',
-      ]),
-      el('li', {}, [el('b', {}, ['Stale']), ' — one seed a “reseed” never actually refreshed.']),
-      el('li', {}, [el('b', {}, ['History']), ' — the same failures, shipped to the real internet.']),
+    el('ol', { class: 'chapter-nav' }, [
+      item('#clone', 'Clone', 'one seed, copied onto two machines: identical secrets.'),
+      item('#fork', 'Fork', 'one seed, inherited by a child that forgot to reseed.'),
+      item('#entropy', 'Starve', 'one seed with almost no entropy, guessed by brute force.'),
+      item('#reseed', 'Stale', 'one seed a “reseed” never actually refreshed.'),
+      item('#history', 'History', 'the same failures, shipped to the real internet.'),
     ]),
   ])
 }

@@ -4,7 +4,7 @@
 
 import { HmacDrbg, type DrbgState } from '../crypto/hmac_drbg'
 import { bytesToHex } from '../crypto/hex'
-import { clear, compareHexBlock, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
+import { clear, compareHexBlock, consequenceStrip, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
 import { stateCard } from './machine'
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -27,11 +27,13 @@ export function forkPanel(): HTMLElement {
     el('span', { class: 'panel-kicker' }, ['Chapter 2 · fork() safety']),
     el('h2', {}, ['A child inherits the parent’s next secret']),
     el('p', { class: 'panel-lede' }, [
-      'When a process forks, the child receives a byte-perfect copy of the parent’s memory — ' +
-        'including the DRBG’s (K, V). Fork the parent, then step all three. The child that pulls ' +
-        'fresh entropy is safe; the child that forgets tracks the parent exactly.',
+      'fork() hands the child a byte-perfect copy of the parent’s DRBG state — so the child that ' +
+        'forgets to reseed emits the parent’s next secret exactly.',
     ]),
   ])
+  panel.append(
+    consequenceStrip([['child skips reseed', 'it emits the parent’s next nonce and key']]),
+  )
 
   const parentCard = stateCard('Parent process', '🌱', 'Parent process output')
   const inheritedCard = stateCard('Child — no reseed', '🧬', 'Inherited child output')

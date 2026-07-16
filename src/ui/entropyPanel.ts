@@ -16,7 +16,7 @@ import {
   type BootModel,
 } from '../entropy/boot'
 import { recoverBatch } from '../entropy/enumerate'
-import { clear, disclosure, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
+import { clear, consequenceStrip, disclosure, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
 
 const MAC = new Uint8Array([0x52, 0x54, 0x00, 0x12, 0x34, 0x56]) // locally-administered VM MAC
 const BASE_TIME = 1_704_067_200 // 2024-01-01T00:00:00Z, a plausible boot window start
@@ -100,12 +100,11 @@ export function entropyPanel(): HTMLElement {
     el('span', { class: 'panel-kicker' }, ['Chapter 3 · Break it yourself']),
     el('h2', {}, ['Starve the seed, enumerate the key']),
     el('p', { class: 'panel-lede' }, [
-      'The DRBG is only as unpredictable as its seed. Slide the entropy from a fully-seeded ' +
-        'kernel CSPRNG down to a headless machine that boots with almost nothing, watch the search ' +
-        'space collapse, then — when it is small enough — try every seed the machine could have had ' +
-        'until the real generator reproduces the nonce it published. That recovers everything after it.',
+      'The DRBG is only as unpredictable as its seed. Starve the entropy, watch the search space ' +
+        'collapse, then brute-force the seed against the real generator until it cracks.',
     ]),
   ])
+  panel.append(consequenceStrip([['guessable seed', 'recover every future output, including the session key']]))
 
   // --- entropy slider ---
   const slider = el('input', {

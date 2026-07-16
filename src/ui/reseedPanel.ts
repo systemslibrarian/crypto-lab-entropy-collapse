@@ -6,7 +6,7 @@
 
 import { HmacDrbg, type DrbgState } from '../crypto/hmac_drbg'
 import { bytesEqual, bytesToHex } from '../crypto/hex'
-import { clear, el, groupHex, indicatorPair, notThis, randomBytes } from './dom'
+import { clear, consequenceStrip, el, groupHex, indicatorPair, notThis, randomBytes } from './dom'
 
 const PRE = 2 // blocks generated before the reseed
 const POST = 2 // blocks generated after the reseed
@@ -17,12 +17,13 @@ export function reseedPanel(): HTMLElement {
     el('span', { class: 'panel-kicker' }, ['Chapter 4 · The reseed that wasn’t']),
     el('h2', {}, ['A healthy counter over a stale seed']),
     el('p', { class: 'panel-lede' }, [
-      'A key server runs for months. An attacker snapshots its DRBG state once and predicts forward. ' +
-        'Later the server “reseeds.” Choose which reseed it got — one that mixes in fresh, ' +
-        'unpredictable entropy, or one whose entropy source silently returned nothing. Both reset the ' +
-        'reseed counter to 1.',
+      'An attacker snapshots a long-lived server’s DRBG state once. Then the server “reseeds” — ' +
+        'choose whether real entropy went in, or nothing did. Both reset the counter to 1.',
     ]),
   ])
+  panel.append(
+    consequenceStrip([['reseed with no entropy', 'attacker keeps predicting; the counter still reads healthy']]),
+  )
 
   const properBtn = el('button', { class: 'action', type: 'button' }, ['Simulate a proper reseed'])
   const noopBtn = el('button', { class: 'action', type: 'button' }, ['Simulate a silent no-op reseed'])

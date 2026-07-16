@@ -41,7 +41,14 @@ test('no WCAG A/AA violations — dark theme', async ({ page }) => {
 
 test('no WCAG A/AA violations — light theme', async ({ page }) => {
   await page.goto('.')
-  await page.locator('#cl-theme-toggle').click()
+  // Prefer the shared bar's toggle when present; otherwise flip data-theme directly so
+  // the light palette is still scanned even without the injected header.
+  const toggle = page.locator('#cl-theme-toggle')
+  if (await toggle.count()) {
+    await toggle.click()
+  } else {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
+  }
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
   await prepare(page)
   await scan(page)

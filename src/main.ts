@@ -5,18 +5,20 @@ import { entropyPanel } from './ui/entropyPanel'
 import { forkPanel } from './ui/forkPanel'
 import { reseedPanel } from './ui/reseedPanel'
 import { historyPanel } from './ui/historyPanel'
+import { createGuidedTour } from './ui/tour'
 import { el } from './ui/dom'
 
 const app = document.getElementById('app')
 if (!app) throw new Error('#app mount point missing')
 
+// Render order matches the chapter numbering and the through-line: 1..5.
 app.append(
   hero(),
   intro(),
   throughLine(),
   clonePanel(),
-  entropyPanel(),
   forkPanel(),
+  entropyPanel(),
   reseedPanel(),
   historyPanel(),
   el('p', { class: 'not-this', style: 'margin-top:1.5rem' }, [
@@ -26,3 +28,11 @@ app.append(
       'modelled: VM snapshots and boot-time entropy, both labelled where they appear.',
   ]),
 )
+
+const tour = createGuidedTour()
+document.getElementById('start-tour')?.addEventListener('click', () => tour.start())
+
+// Deep-link support: /#clone, /#fork, /#entropy, /#reseed, /#history.
+if (location.hash.length > 1) {
+  document.querySelector(location.hash)?.scrollIntoView()
+}
