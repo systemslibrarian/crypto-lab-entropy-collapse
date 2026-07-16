@@ -1,0 +1,584 @@
+/* ============================================================================
+   Entropy Collapse — crypto-lab
+   Palette tokens (dark default). Muted text lowers lightness, never opacity.
+   Text on any colored fill uses a dedicated ink token >= 4.5:1.
+   ============================================================================ */
+:root {
+  --bg: #15120b;
+  --panel: #201b12;
+  --panel-2: #2a2417;
+  --border: #423a27;
+  --text: #f4efe4;
+  --text-dim: #cdc5b4;
+  --text-muted: #a89e89;
+
+  /* Brand accent (catalog value) — used by the shared bar and for fills. */
+  --accent: #a16207;
+  --accent-text: #e6a94d; /* emphasis text on dark bg */
+  --ink-on-accent: #ffffff; /* text on solid --accent (contrast 4.9:1) */
+
+  --danger: #c23b2e;
+  --danger-text: #ff9a8d;
+  --ink-on-danger: #ffffff;
+
+  --ok: #2f8f57;
+  --ok-text: #7fd6a0;
+
+  /* Neutral "the primitive is fine" tone — deliberately NOT green. */
+  --info-text: #9fb6c9;
+  --info-border: #3d4a57;
+
+  --radius: 12px;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root[data-theme='light'] {
+  --bg: #f7f3ea;
+  --panel: #fffdf8;
+  --panel-2: #f0e9da;
+  --border: #d9cfb8;
+  --text: #241f16;
+  --text-dim: #4a4234;
+  --text-muted: #5f5644;
+
+  --accent: #a16207;
+  --accent-text: #7a4a00;
+  --ink-on-accent: #ffffff;
+
+  --danger: #b3261e;
+  --danger-text: #a3271b;
+  --ink-on-danger: #ffffff;
+
+  --ok: #1c6b3f;
+  --ok-text: #1c6b3f;
+
+  --info-text: #3a566b;
+  --info-border: #b7c4cf;
+}
+
+html {
+  background-color: var(--bg); /* longhand, per a11y gate */
+  color-scheme: dark;
+}
+html[data-theme='light'] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.5;
+}
+
+/* Scope base element rules to #app so the always-dark top bar is untouched. */
+#app {
+  display: block;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem) 3rem;
+}
+#app p {
+  color: var(--text);
+}
+#app a {
+  color: var(--accent-text);
+  text-decoration: underline; /* inline links: persistent underline, not color alone */
+  text-underline-offset: 2px;
+}
+#app a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* ---------- Shared top bar (always-dark, self-contained) ---------- */
+.cl-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem clamp(1rem, 4vw, 2rem);
+  background-color: #0e0c08;
+  border-bottom: 1px solid #2c2618;
+  color: #f4efe4;
+}
+.cl-topbar-brand {
+  font-weight: 700;
+  color: #f4efe4;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.cl-topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.cl-topbar-link {
+  color: #f0d9a8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.9rem;
+}
+.cl-topbar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #241d10;
+  color: #f4efe4;
+  border: 1px solid #4a3f27;
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.cl-topbar-toggle:hover {
+  background-color: #2f2614;
+}
+.cl-skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background-color: var(--accent);
+  color: var(--ink-on-accent);
+  padding: 0.5rem 0.9rem;
+  border-radius: 0 0 8px 0;
+  z-index: 20;
+  text-decoration: none;
+}
+.cl-skip:focus {
+  left: 0;
+}
+
+/* ---------- Hero (managed standard block) ---------- */
+/* BEGIN cl-hero standard — managed, keep in sync across fleet */
+.cl-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(1rem, 4vw, 3rem);
+  flex-wrap: wrap;
+  margin: clamp(1rem, 3vw, 2rem) 0 1.5rem;
+}
+.cl-hero-main {
+  flex: 1 1 22rem;
+  min-width: min(100%, 20rem);
+}
+.cl-hero-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.8vw, 2.7rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+.cl-hero-sub {
+  margin: 0.4rem 0 0;
+  font-size: clamp(0.9rem, 1.6vw, 1.05rem);
+  letter-spacing: 0.01em;
+  color: var(--accent-text); /* replaces opacity for AA-safe muting */
+}
+.cl-hero-desc {
+  margin: 0.55rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  max-width: 60ch;
+}
+.cl-hero-why {
+  flex: 0 1 min(40%, 26rem);
+  min-width: min(100%, 15rem);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.85rem 1.05rem;
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+.cl-hero-why-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent-text);
+}
+.cl-hero-why-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+@media (max-width: 640px) {
+  .cl-hero {
+    flex-direction: column;
+  }
+  .cl-hero-why {
+    flex-basis: auto;
+    width: 100%;
+  }
+}
+/* END cl-hero standard */
+
+/* ---------- Intro / prose ---------- */
+.intro {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--panel);
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.5rem;
+}
+.intro h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+}
+.intro p {
+  margin: 0.5rem 0 0;
+  color: var(--text-dim);
+}
+.lead {
+  color: var(--text);
+  font-size: 1.02rem;
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--panel);
+  padding: 1.1rem 1.25rem 1.35rem;
+  margin: 0 0 1.5rem;
+}
+.panel > h2 {
+  margin: 0 0 0.15rem;
+  font-size: 1.25rem;
+}
+.panel-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.panel-lede {
+  color: var(--text-dim);
+  margin: 0.35rem 0 1rem;
+  max-width: 68ch;
+}
+.not-this {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-left: 3px solid var(--border);
+  padding: 0.1rem 0 0.1rem 0.7rem;
+  margin: 0.9rem 0 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 0.6rem 0 1rem;
+}
+
+button.action {
+  background-color: var(--accent);
+  color: var(--ink-on-accent);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.action:hover {
+  filter: brightness(1.08);
+}
+button.action:disabled {
+  background-color: var(--panel-2);
+  color: var(--text-muted);
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+button.ghost {
+  background-color: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+button.ghost:hover {
+  background-color: var(--panel-2);
+}
+
+/* Slider + selects */
+label.field {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+}
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 2rem 0.45rem 0.7rem;
+  font: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a89e89' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+}
+
+/* ---------- Hex / byte display ---------- */
+.hexblock {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  word-break: break-all;
+  background-color: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: var(--text);
+}
+.byte-diff {
+  background-color: color-mix(in oklab, var(--danger) 35%, transparent);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+/* Side-by-side machine streams */
+.streams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.stream h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+}
+.stream-row {
+  margin: 0 0 0.5rem;
+}
+.stream-row .stream-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+@media (max-width: 640px) {
+  .streams {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Two-track indicator: primitive status vs security verdict ---------- */
+.indicators {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+}
+@media (max-width: 640px) {
+  .indicators {
+    grid-template-columns: 1fr;
+  }
+}
+.indicator {
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+}
+.indicator .ind-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.indicator .ind-value {
+  font-size: 1.02rem;
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.indicator .ind-note {
+  font-size: 0.85rem;
+  margin: 0.3rem 0 0;
+  color: var(--text-dim);
+}
+
+/* Primitive indicator — neutral/steady (the DRBG is fine). Never green. */
+.indicator.primitive {
+  border-color: var(--info-border);
+  background-color: color-mix(in oklab, var(--info-text) 8%, transparent);
+}
+.indicator.primitive .ind-label,
+.indicator.primitive .ind-value {
+  color: var(--info-text);
+}
+
+/* Security verdict — color tracks system integrity, not the raw return value. */
+.indicator.verdict[data-state='intact'] {
+  border-color: var(--ok);
+  background-color: color-mix(in oklab, var(--ok) 12%, transparent);
+}
+.indicator.verdict[data-state='intact'] .ind-label,
+.indicator.verdict[data-state='intact'] .ind-value {
+  color: var(--ok-text);
+}
+.indicator.verdict[data-state='collapsed'] {
+  border-color: var(--danger);
+  background-color: color-mix(in oklab, var(--danger) 16%, transparent);
+}
+.indicator.verdict[data-state='collapsed'] .ind-label,
+.indicator.verdict[data-state='collapsed'] .ind-value {
+  color: var(--danger-text);
+}
+
+/* A raw crypto result that "matched" — shown neutral, never as green success. */
+.result-line {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  margin: 0.6rem 0 0;
+  color: var(--text-dim);
+}
+.result-line .flag-alarm {
+  color: var(--danger-text);
+  font-weight: 700;
+}
+.result-line .flag-neutral {
+  color: var(--info-text);
+  font-weight: 700;
+}
+
+/* ---------- Keyspace bar ---------- */
+.keyspace {
+  margin: 0.8rem 0;
+}
+.keyspace .ks-figure {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.progress {
+  height: 12px;
+  background-color: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background-color: var(--accent);
+}
+
+/* ---------- Details / tooltips ---------- */
+details.disclosure {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  margin: 0.8rem 0 0;
+  background-color: var(--panel-2);
+}
+details.disclosure > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+}
+details.disclosure > summary::marker {
+  color: var(--accent-text);
+}
+details.disclosure p,
+details.disclosure li {
+  color: var(--text-dim);
+}
+
+/* ---------- Historical facts table ---------- */
+.facts {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+}
+.facts caption {
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
+}
+.facts th,
+.facts td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+  color: var(--text);
+}
+.facts th {
+  background-color: var(--panel-2);
+}
+
+.scroll-x {
+  overflow: auto;
+}
+
+/* ---------- Scripture footer ---------- */
+.scripture-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+  padding: 1.4rem clamp(1rem, 4vw, 2rem);
+  text-align: center;
+}
+.scripture-footer p {
+  margin: 0;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
+.callout {
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent);
+  padding: 0.85rem 1rem;
+  margin: 1.25rem 0;
+}
+.callout strong {
+  color: var(--accent-text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

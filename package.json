@@ -1,0 +1,23 @@
+{
+  "name": "crypto-lab-entropy-collapse",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Seed provenance & RNG state duplication — when two machines share a DRBG seed, they share every secret.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:a11y": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^22.20.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.5"
+  }
+}
