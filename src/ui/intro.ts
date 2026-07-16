@@ -24,6 +24,26 @@ export function hero(): HTMLElement {
   ])
 }
 
+export function throughLine(): HTMLElement {
+  return el('section', { class: 'throughline' }, [
+    el('h2', {}, ['One root cause, five ways to see it']),
+    el('p', {}, [
+      'Every panel below is the same real generator, unmodified. Nothing here attacks the DRBG — ' +
+        'each chapter just changes what happens to its seed:',
+    ]),
+    el('ol', {}, [
+      el('li', {}, [el('b', {}, ['Clone']), ' — one seed, copied onto two machines: identical secrets.']),
+      el('li', {}, [el('b', {}, ['Fork']), ' — one seed, inherited by a child that forgot to reseed.']),
+      el('li', {}, [
+        el('b', {}, ['Starve']),
+        ' — one seed with almost no entropy, guessed by brute force.',
+      ]),
+      el('li', {}, [el('b', {}, ['Stale']), ' — one seed a “reseed” never actually refreshed.']),
+      el('li', {}, [el('b', {}, ['History']), ' — the same failures, shipped to the real internet.']),
+    ]),
+  ])
+}
+
 export function intro(): HTMLElement {
   return el('section', { class: 'intro' }, [
     el('h2', {}, ['What is this?']),

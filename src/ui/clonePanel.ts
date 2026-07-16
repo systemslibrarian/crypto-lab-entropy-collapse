@@ -3,20 +3,11 @@
 // and their output blocks drop in perfect sync, because DRBG output is a deterministic
 // function of that state. The security verdict is kept separate from the raw result.
 
-import { HmacDrbg, type DrbgState } from '../crypto/hmac_drbg'
+import { HmacDrbg } from '../crypto/hmac_drbg'
 import { bytesToHex } from '../crypto/hex'
 import { DEFAULT_SCRIPT } from '../model/clone'
-import {
-  abbrevHex,
-  clear,
-  compareHexBlock,
-  disclosure,
-  el,
-  hexBlock,
-  indicatorPair,
-  notThis,
-  randomBytes,
-} from './dom'
+import { clear, compareHexBlock, disclosure, el, hexBlock, indicatorPair, notThis, randomBytes } from './dom'
+import { stateCard } from './machine'
 import { SIBLINGS } from './links'
 
 const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -35,7 +26,7 @@ export function clonePanel(): HTMLElement {
   let autoRunning = false
 
   const panel = el('section', { class: 'panel', id: 'clone' }, [
-    el('span', { class: 'panel-kicker' }, ['The headline']),
+    el('span', { class: 'panel-kicker' }, ['Chapter 1 · The headline']),
     el('h2', {}, ['Clone the machine, clone every secret']),
     el('p', { class: 'panel-lede' }, [
       'One virtual machine is running. Freeze it, restore the image onto two servers, and step ' +
@@ -44,19 +35,14 @@ export function clonePanel(): HTMLElement {
     ]),
   ])
 
-  // --- the two machines ---
-  const machineA = machineCard('A')
-  const machineB = machineCard('B')
-  const stage = el('div', { class: 'machines' }, [machineA.root, machineB.root])
-  panel.append(stage)
+  const machineA = stateCard('Server A', '🖥', 'Server A output')
+  const machineB = stateCard('Server B', '🖥', 'Server B output')
+  panel.append(el('div', { class: 'machines' }, [machineA.root, machineB.root]))
 
-  // --- controls ---
   const setupBtn = el('button', { class: 'action', type: 'button' }, ['Snapshot & restore'])
   const stepBtn = el('button', { class: 'ghost', type: 'button' }, ['Step ▸'])
   const autoBtn = el('button', { class: 'ghost', type: 'button' }, ['Auto-run ▸▸'])
-  const divergeBtn = el('button', { class: 'ghost', type: 'button' }, [
-    'Give Server B its own entropy',
-  ])
+  const divergeBtn = el('button', { class: 'ghost', type: 'button' }, ['Give Server B its own entropy'])
   panel.append(el('div', { class: 'controls' }, [setupBtn, stepBtn, autoBtn, divergeBtn]))
 
   const live = el('div', { role: 'status', 'aria-live': 'polite' }, [])
@@ -68,22 +54,26 @@ export function clonePanel(): HTMLElement {
     if (!a || !b) return
     const sa = a.state
     const sb = b.state
-    machineA.setState(sa)
-    machineB.setState(sb, sa)
     const same = bytesToHex(sa.K) === bytesToHex(sb.K) && bytesToHex(sa.V) === bytesToHex(sb.V)
-    machineA.setSync(same, 'A')
-    machineB.setSync(same, 'B')
+    machineA.setState(sa.K, sa.V)
+    machineB.setState(sb.K, sb.V, { K: sa.K, V: sa.V })
+    machineA.badge(same ? 'state loaded' : 'independent state', 'muted')
+    machineB.badge(same ? '≡ identical to A' : '≠ differs from A', same ? 'alarm' : 'ok')
   }
 
-  function setup(): void {
+  function freshClones(): void {
     a = HmacDrbg.fromSnapshot(snap)
     b = HmacDrbg.fromSnapshot(snap)
     stepIdx = 0
-    diverged = false
-    machineA.reset()
-    machineB.reset()
+    machineA.clearLog()
+    machineB.clearLog()
     clear(live)
     clear(verdictHost)
+  }
+
+  function setup(): void {
+    diverged = false
+    freshClones()
     renderState()
     live.append(
       el('p', { class: 'result-line' }, [
@@ -92,13 +82,6 @@ export function clonePanel(): HTMLElement {
         '. Nothing has been generated yet — press Step.',
       ]),
     )
-    stepBtn.disabled = false
-    autoBtn.disabled = false
-    divergeBtn.disabled = false
-  }
-
-  function labelIsSecret(label: string): boolean {
-    return /key/i.test(label)
   }
 
   function step(): boolean {
@@ -114,7 +97,7 @@ export function clonePanel(): HTMLElement {
     stepIdx++
     renderState()
 
-    if (!diverged && labelIsSecret(item.label)) showCollapseVerdict()
+    if (!diverged && /key/i.test(item.label)) showCollapseVerdict()
     if (diverged) showRestoredVerdict()
 
     const done = stepIdx >= DEFAULT_SCRIPT.length
@@ -138,15 +121,9 @@ export function clonePanel(): HTMLElement {
 
   function diverge(): void {
     // Restart from the identical snapshot, but give Server B one machine-unique input.
-    a = HmacDrbg.fromSnapshot(snap)
-    b = HmacDrbg.fromSnapshot(snap)
-    b.reseed(randomBytes(32))
-    stepIdx = 0
     diverged = true
-    machineA.reset()
-    machineB.reset()
-    clear(live)
-    clear(verdictHost)
+    freshClones()
+    b!.reseed(randomBytes(32))
     renderState()
     live.append(
       el('p', { class: 'result-line' }, [
@@ -257,74 +234,4 @@ function consequenceCallout(): HTMLElement {
       '.',
     ]),
   ])
-}
-
-// --- one machine card with a live state readout and an output log ---
-interface MachineCard {
-  root: HTMLElement
-  setState: (s: DrbgState, compare?: DrbgState) => void
-  setSync: (same: boolean, which: 'A' | 'B') => void
-  log: (label: string, valueNode: HTMLElement) => void
-  reset: () => void
-}
-
-function machineCard(which: 'A' | 'B'): MachineCard {
-  const kChip = el('code', { class: 'state-hex' }, ['—'])
-  const vChip = el('code', { class: 'state-hex' }, ['—'])
-  const sync = el('span', { class: 'sync-badge', 'data-sync': 'idle' }, ['awaiting restore'])
-  const logEl = el('div', {
-    class: 'machine-log',
-    role: 'log',
-    'aria-label': `Server ${which} output`,
-  })
-
-  const root = el('div', { class: 'machine' }, [
-    el('div', { class: 'machine-head' }, [
-      el('span', { class: 'machine-glyph', 'aria-hidden': 'true' }, ['🖥']),
-      el('h3', {}, [`Server ${which}`]),
-      sync,
-    ]),
-    el('div', { class: 'machine-state' }, [
-      el('div', {}, [el('span', { class: 'sk' }, ['K']), kChip]),
-      el('div', {}, [el('span', { class: 'sk' }, ['V']), vChip]),
-    ]),
-    logEl,
-  ])
-
-  return {
-    root,
-    setState(s, compare) {
-      const kDiff = compare && bytesToHex(compare.K) !== bytesToHex(s.K)
-      const vDiff = compare && bytesToHex(compare.V) !== bytesToHex(s.V)
-      kChip.textContent = abbrevHex(s.K)
-      vChip.textContent = abbrevHex(s.V)
-      kChip.className = 'state-hex' + (kDiff ? ' diverged' : '')
-      vChip.className = 'state-hex' + (vDiff ? ' diverged' : '')
-    },
-    setSync(same, w) {
-      sync.setAttribute('data-sync', same ? 'same' : 'diff')
-      sync.textContent =
-        w === 'A'
-          ? same
-            ? 'state loaded'
-            : 'independent state'
-          : same
-            ? '≡ identical to A'
-            : '≠ differs from A'
-    },
-    log(label, valueNode) {
-      logEl.append(
-        el('div', { class: 'log-row' }, [el('span', { class: 'log-label' }, [label]), valueNode]),
-      )
-    },
-    reset() {
-      clear(logEl)
-      kChip.textContent = '—'
-      vChip.textContent = '—'
-      kChip.className = 'state-hex'
-      vChip.className = 'state-hex'
-      sync.setAttribute('data-sync', 'idle')
-      sync.textContent = 'restored'
-    },
-  }
 }

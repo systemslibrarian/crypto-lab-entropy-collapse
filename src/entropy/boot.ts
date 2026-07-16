@@ -14,6 +14,11 @@ import { concatBytes } from '../crypto/hex'
 /** Linux default pid_max: process ids run 0..32767, i.e. 15 bits. */
 export const PID_BITS = 15
 
+/** On a fresh boot the key-generating process runs early, so its PID is small. We model
+ *  the searched PID range as ~11 bits (0..2047); the remaining entropy is the coarse boot
+ *  clock. This keeps the model faithful (early-boot low PID) and lets the boot time vary. */
+export const BOOT_PID_BITS = 11
+
 /** Above this many unknown bits we refuse to enumerate live and say why (honest).
  *  At ~10k candidate DRBGs/second in a browser, 2^16 finishes in a few seconds; the
  *  larger stops are left un-run precisely so the slider shows where safety begins. */
@@ -55,12 +60,13 @@ export function isEnumerable(unknownBits: number): boolean {
   return unknownBits <= ENUMERABLE_MAX_BITS
 }
 
-/** Split a secret index into a concrete (boot-time-offset, pid) pair. */
+/** Split a secret index into a concrete (boot-time-offset, pid) pair. Low bits are the
+ *  early-boot PID; the remaining high bits are the coarse boot-clock offset in seconds. */
 export function decodeSecret(secretIndex: number, unknownBits: number): { timeOffset: number; pid: number } {
-  const pidBits = Math.min(PID_BITS, unknownBits)
+  const pidBits = Math.min(BOOT_PID_BITS, unknownBits)
   const pidMask = (1 << pidBits) - 1
   const pid = secretIndex & pidMask
-  const timeOffset = pidBits >= 31 ? 0 : Math.floor(secretIndex / (pidMask + 1))
+  const timeOffset = Math.floor(secretIndex / (pidMask + 1))
   return { timeOffset, pid }
 }
 

@@ -6,7 +6,7 @@ import { SIBLINGS } from './links'
 
 export function historyPanel(): HTMLElement {
   const panel = el('section', { class: 'panel', id: 'history' }, [
-    el('span', { class: 'panel-kicker' }, ['This already happened']),
+    el('span', { class: 'panel-kicker' }, ['Chapter 5 · This already happened']),
     el('h2', {}, ['Two real collapses, no attacker in either']),
     el('p', { class: 'panel-lede' }, [
       'These are not hypotheticals. In both cases the generator worked; the seed did not.',

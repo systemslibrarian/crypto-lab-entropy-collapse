@@ -1,5 +1,5 @@
 import './style.css'
-import { hero, intro } from './ui/intro'
+import { hero, intro, throughLine } from './ui/intro'
 import { clonePanel } from './ui/clonePanel'
 import { entropyPanel } from './ui/entropyPanel'
 import { forkPanel } from './ui/forkPanel'
@@ -13,6 +13,7 @@ if (!app) throw new Error('#app mount point missing')
 app.append(
   hero(),
   intro(),
+  throughLine(),
   clonePanel(),
   entropyPanel(),
   forkPanel(),

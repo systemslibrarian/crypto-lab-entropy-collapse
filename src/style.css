@@ -51,7 +51,7 @@
   --ink-on-danger: #ffffff;
 
   --ok: #1c6b3f;
-  --ok-text: #1c6b3f;
+  --ok-text: #0f5029; /* darker green: >=4.5:1 on the ok-tinted badge fills too */
 
   --info-text: #3a566b;
   --info-border: #b7c4cf;
@@ -611,15 +611,19 @@ details.disclosure li {
   border: 1px solid var(--border);
   color: var(--text-muted);
 }
-.sync-badge[data-sync='same'] {
+.sync-badge[data-tone='alarm'] {
   color: var(--danger-text);
   border-color: var(--danger);
   background-color: color-mix(in oklab, var(--danger) 14%, transparent);
 }
-.sync-badge[data-sync='diff'] {
+.sync-badge[data-tone='ok'] {
   color: var(--ok-text);
   border-color: var(--ok);
   background-color: color-mix(in oklab, var(--ok) 14%, transparent);
+}
+.sync-badge[data-tone='muted'],
+.sync-badge[data-tone='idle'] {
+  color: var(--text-muted);
 }
 .machine-state {
   display: flex;
@@ -663,6 +667,166 @@ details.disclosure li {
 .byte-chg {
   background-color: color-mix(in oklab, var(--accent) 32%, transparent);
   border-radius: 3px;
+}
+
+/* ---------- Fork panel: a fork() tree ---------- */
+.fork-tree {
+  margin: 0.4rem 0 1rem;
+}
+.fork-parent {
+  max-width: 24rem;
+  margin: 0 auto;
+}
+.fork-split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+.fork-split .fork-branch {
+  height: 2px;
+  width: clamp(2rem, 12vw, 5rem);
+  background-color: var(--border);
+}
+.fork-node {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--accent-text);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  background-color: color-mix(in oklab, var(--accent) 8%, transparent);
+}
+.fork-children {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+@media (max-width: 640px) {
+  .fork-children {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Reseed panel: two-lane timeline + health monitor ---------- */
+.timeline {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.tl-lane {
+  display: flex;
+  align-items: stretch;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.tl-lane-label {
+  flex: 0 0 9rem;
+  align-self: center;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.tl-track {
+  display: flex;
+  align-items: stretch;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.tl-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 2px dashed var(--accent);
+  padding-left: 0.45rem;
+  margin-left: 0.1rem;
+}
+.tl-rule-tag {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
+  text-transform: uppercase;
+}
+.blk {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.55rem;
+  background-color: var(--panel-2);
+  min-width: 7.5rem;
+}
+.blk code {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text);
+}
+.blk-tag {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.blk.hit {
+  border-color: var(--danger);
+  background-color: color-mix(in oklab, var(--danger) 12%, transparent);
+}
+.blk.hit .blk-tag {
+  color: var(--danger-text);
+}
+.blk.miss {
+  border-color: var(--ok);
+  background-color: color-mix(in oklab, var(--ok) 12%, transparent);
+}
+.blk.miss .blk-tag {
+  color: var(--ok-text);
+}
+.health {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--panel-2);
+  margin-bottom: 0.7rem;
+}
+.health-icon {
+  font-size: 1.1rem;
+}
+
+/* ---------- Narrative through-line ---------- */
+.throughline {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  background-color: var(--panel);
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.5rem;
+}
+.throughline h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.1rem;
+}
+.throughline p {
+  color: var(--text-dim);
+  margin: 0 0 0.5rem;
+}
+.throughline ol {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+.throughline li {
+  margin: 0.3rem 0;
+  color: var(--text-dim);
+}
+.throughline li b {
+  color: var(--accent-text);
 }
 
 /* ---------- Entropy panel: collapse meter, live ticker, cracked banner ---------- */

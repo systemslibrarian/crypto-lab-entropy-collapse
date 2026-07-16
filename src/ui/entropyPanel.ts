@@ -97,7 +97,7 @@ export function entropyPanel(): HTMLElement {
   let cancel = false
 
   const panel = el('section', { class: 'panel', id: 'entropy' }, [
-    el('span', { class: 'panel-kicker' }, ['Break it yourself']),
+    el('span', { class: 'panel-kicker' }, ['Chapter 3 · Break it yourself']),
     el('h2', {}, ['Starve the seed, enumerate the key']),
     el('p', { class: 'panel-lede' }, [
       'The DRBG is only as unpredictable as its seed. Slide the entropy from a fully-seeded ' +
