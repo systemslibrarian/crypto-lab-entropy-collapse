@@ -214,11 +214,11 @@ export function entropyPanel(): HTMLElement {
       el('p', { class: 'stream-label' }, ['Boot seed material = MAC ‖ boot-time ‖ PID (a real hash of these)']),
       el('table', { class: 'facts' }, [
         el('tbody', {}, [
-          el('tr', {}, [el('th', {}, ['MAC address (public)']), el('td', {}, [macStr])]),
-          el('tr', {}, [el('th', {}, ['Boot time']), el('td', {}, [bootDate])]),
-          el('tr', {}, [el('th', {}, ['Process ID']), el('td', {}, [String(pid)])]),
+          el('tr', {}, [el('th', { scope: 'row' }, ['MAC address (public)']), el('td', {}, [macStr])]),
+          el('tr', {}, [el('th', { scope: 'row' }, ['Boot time']), el('td', {}, [bootDate])]),
+          el('tr', {}, [el('th', { scope: 'row' }, ['Process ID']), el('td', {}, [String(pid)])]),
           el('tr', {}, [
-            el('th', {}, ['12-byte seed material']),
+            el('th', { scope: 'row' }, ['12-byte seed material']),
             el('td', { style: 'font-family:var(--mono);font-size:.8rem;word-break:break-all' }, [
               bytesToHex(victim.material!),
             ]),

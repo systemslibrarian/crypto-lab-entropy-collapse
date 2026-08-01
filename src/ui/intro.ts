@@ -20,16 +20,18 @@ export function hero(): HTMLElement {
           el('span', { class: 'cta-sub' }, ['60-second guided tour']),
         ]),
       ]),
-      el('div', { class: 'trust-row', role: 'list', 'aria-label': 'Verification' }, [
-        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}#build--verify` }, [
+      // role="group", not list/listitem: role="listitem" on an <a> would override
+      // its implicit link role, so these would stop being announced as links.
+      el('div', { class: 'trust-row', role: 'group', 'aria-label': 'Verification' }, [
+        el('a', { class: 'trust-badge', href: `${REPO}#build--verify` }, [
           el('span', { 'aria-hidden': 'true' }, ['✓ ']),
           '34 tests passing',
         ]),
-        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}/blob/main/src/crypto/nist_drbg_vectors.ts` }, [
+        el('a', { class: 'trust-badge', href: `${REPO}/blob/main/src/crypto/nist_drbg_vectors.ts` }, [
           el('span', { 'aria-hidden': 'true' }, ['✓ ']),
           'NIST + RFC vectors',
         ]),
-        el('a', { class: 'trust-badge', role: 'listitem', href: `${REPO}#build--verify` }, [
+        el('a', { class: 'trust-badge', href: `${REPO}#build--verify` }, [
           el('span', { 'aria-hidden': 'true' }, ['✓ ']),
           'WCAG AA checked',
         ]),
