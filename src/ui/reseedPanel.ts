@@ -100,11 +100,18 @@ export function reseedPanel(): HTMLElement {
     srv.reseed(kind === 'proper' ? randomBytes(32) : new Uint8Array(0))
     atk.reseed(new Uint8Array(0))
 
+    // The verdict below is read off THESE comparisons, not off which button was
+    // pressed. If a "proper" reseed failed to change the state, or an empty
+    // reseed somehow did, the panel would say so instead of reciting the
+    // expected story.
+    let postMatches = 0
     for (let i = 0; i < POST; i++) {
       const s = srv.generate(BLK)
       const a = atk.generate(BLK)
+      const hit = bytesEqual(a, s)
+      if (hit) postMatches++
       srvCells.push(block(s))
-      atkCells.push(block(a, bytesEqual(a, s) ? 'hit' : 'miss'))
+      atkCells.push(block(a, hit ? 'hit' : 'miss'))
     }
 
     timeline.append(
@@ -112,23 +119,28 @@ export function reseedPanel(): HTMLElement {
       lane('Attacker prediction', atkCells, false),
     )
 
-    const stillPredictable = kind === 'noop'
+    const stillPredictable = postMatches === POST
+    const counter = srv.getReseedCounter()
+    // "Healthy" is what a counter-watching monitor concludes, and that conclusion
+    // is itself derived from the counter — the point being that the conclusion is
+    // wrong whenever `stillPredictable` holds.
+    const counterLooksFresh = counter <= POST + 1
     health.append(
       el('span', { class: 'health-icon', 'aria-hidden': 'true' }, ['🩺']),
       el('span', {}, [
         'Health monitor: reseed_counter = ',
-        el('b', {}, [String(srv.getReseedCounter())]),
+        el('b', {}, [String(counter)]),
         ' (reset to 1 by the reseed, +1 per block since) — reads ',
-        el('span', { class: 'flag-neutral' }, ['fresh / healthy']),
+        counterLooksFresh
+          ? el('span', { class: 'flag-neutral' }, ['fresh / healthy'])
+          : el('span', { class: 'flag-alarm' }, ['stale — reseed overdue']),
         '.',
       ]),
     )
 
     live.append(
       el('p', { class: 'result-line' }, [
-        kind === 'proper'
-          ? 'After the reseed, the attacker’s prediction '
-          : 'After the reseed, the attacker’s prediction ',
+        `After the reseed, ${postMatches} of ${POST} predicted blocks matched the server byte-for-byte — `,
         stillPredictable
           ? el('span', { class: 'flag-alarm' }, ['STILL MATCHES'])
           : el('span', { class: 'flag-neutral' }, ['DIVERGES']),

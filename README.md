@@ -57,7 +57,7 @@ and two machines become one; starve it and its entire output becomes guessable.
 
 ## Live Demo
 
-`https://crypto-lab.systemslibrarian.dev/crypto-lab-entropy-collapse/` (deployed from
+**https://systemslibrarian.github.io/crypto-lab-entropy-collapse/** (deployed from
 `main` via GitHub Pages). You can: run the clone and watch both streams stay identical,
 diverge Server B with fresh entropy, drag the entropy slider and brute-force a real seed,
 fork a process, and toggle a proper vs. no-op reseed — each with its own crypto-result and

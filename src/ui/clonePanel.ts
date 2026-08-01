@@ -34,6 +34,11 @@ export function clonePanel(): HTMLElement {
   let stepIdx = 0
   let diverged = false
   let autoRunning = false
+  // Measured, not assumed: how many generated fields have been compared so far and
+  // how many of those came out byte-identical. Every verdict below is read off these
+  // two numbers, so a run where the streams did NOT behave as described would say so.
+  let fieldsCompared = 0
+  let fieldsIdentical = 0
 
   const panel = el('section', { class: 'panel', id: 'clone' }, [
     el('span', { class: 'panel-kicker' }, ['Chapter 1 · The headline']),
@@ -65,11 +70,20 @@ export function clonePanel(): HTMLElement {
   const verdictHost = el('div', {}, [])
   panel.append(verdictHost)
 
+  /** Real comparison of the two live working states — the source for every claim
+   *  this panel makes about whether A and B are "the same machine". */
+  function statesMatch(): boolean {
+    if (!a || !b) return false
+    const sa = a.state
+    const sb = b.state
+    return bytesToHex(sa.K) === bytesToHex(sb.K) && bytesToHex(sa.V) === bytesToHex(sb.V)
+  }
+
   function renderState(): void {
     if (!a || !b) return
     const sa = a.state
     const sb = b.state
-    const same = bytesToHex(sa.K) === bytesToHex(sb.K) && bytesToHex(sa.V) === bytesToHex(sb.V)
+    const same = statesMatch()
     machineA.setState(sa.K, sa.V)
     machineB.setState(sb.K, sb.V, { K: sa.K, V: sa.V })
     machineA.badge(same ? 'state loaded' : 'independent state', 'muted')
@@ -80,6 +94,8 @@ export function clonePanel(): HTMLElement {
     a = HmacDrbg.fromSnapshot(snap)
     b = HmacDrbg.fromSnapshot(snap)
     stepIdx = 0
+    fieldsCompared = 0
+    fieldsIdentical = 0
     machineA.clearLog()
     machineB.clearLog()
     clear(live)
@@ -90,10 +106,13 @@ export function clonePanel(): HTMLElement {
     diverged = false
     freshClones()
     renderState()
+    const same = statesMatch()
     live.append(
       el('p', { class: 'result-line' }, [
         'Both servers restored from the same image. Internal state (K, V): ',
-        el('span', { class: 'flag-alarm' }, ['IDENTICAL']),
+        same
+          ? el('span', { class: 'flag-alarm' }, ['IDENTICAL'])
+          : el('span', { class: 'flag-neutral' }, ['DIFFERENT']),
         '. Nothing has been generated yet — press Step.',
       ]),
     )
@@ -105,6 +124,8 @@ export function clonePanel(): HTMLElement {
     const item = DEFAULT_SCRIPT[stepIdx]
     const outA = a.generate(item.bytes)
     const outB = b.generate(item.bytes)
+    fieldsCompared++
+    if (bytesToHex(outA) === bytesToHex(outB)) fieldsIdentical++
     machineA.log(item.label, hexBlock(outA))
     // B is always compared to A: highlight the matches while they hold, the changes once
     // Server B has its own entropy — both in a calm tone, never alarm-red.
@@ -140,10 +161,13 @@ export function clonePanel(): HTMLElement {
     freshClones()
     b!.reseed(randomBytes(32))
     renderState()
+    const same = statesMatch()
     live.append(
       el('p', { class: 'result-line' }, [
         'Server B mixed in one unpredictable entropy input. Internal state now ',
-        el('span', { class: 'flag-neutral' }, ['DIFFERS']),
+        same
+          ? el('span', { class: 'flag-alarm' }, ['STILL IDENTICAL'])
+          : el('span', { class: 'flag-neutral' }, ['DIFFERS']),
         ' — step to watch the streams part ways.',
       ]),
     )
@@ -152,11 +176,16 @@ export function clonePanel(): HTMLElement {
 
   function showCollapseVerdict(): void {
     clear(verdictHost)
+    const allSame = fieldsIdentical === fieldsCompared
     verdictHost.append(
       el('p', { class: 'result-line' }, [
-        'Byte-for-byte comparison of every field so far: ',
-        el('span', { class: 'flag-alarm' }, ['IDENTICAL']),
-        ' — the streams never diverge.',
+        `Byte-for-byte comparison of every field so far: ${fieldsIdentical} of ${fieldsCompared} `,
+        allSame
+          ? el('span', { class: 'flag-alarm' }, ['IDENTICAL'])
+          : el('span', { class: 'flag-neutral' }, ['identical']),
+        allSame
+          ? ' — the streams never diverge.'
+          : ' — the streams did not stay in lockstep, which this restore should not allow.',
       ]),
       indicatorPair(
         {
@@ -165,15 +194,26 @@ export function clonePanel(): HTMLElement {
           value: 'HMAC_DRBG operating correctly',
           note: 'Both machines ran the real SP 800-90A generator exactly as specified. No fault, no attacker.',
         },
-        {
-          state: 'collapsed',
-          label: 'Security verdict',
-          icon: '✗',
-          value: 'INTEGRITY COLLAPSED',
-          note: 'Two independent machines share every nonce and every key. The system is compromised even though the primitive is flawless.',
-        },
+        allSame
+          ? {
+              state: 'collapsed',
+              label: 'Security verdict',
+              icon: '✗',
+              value: 'INTEGRITY COLLAPSED',
+              note: 'Two independent machines share every nonce and every key. The system is compromised even though the primitive is flawless.',
+            }
+          : {
+              state: 'intact',
+              label: 'Security verdict',
+              icon: '✓',
+              value: 'NOT COLLAPSED',
+              note: 'The restored machines produced different output, so this run does not demonstrate the shared-state failure.',
+            },
       ),
-      consequenceCallout(),
+      // Only shown when the streams actually stayed identical — the callout
+      // spells out the consequences of a collapse, so it must not appear on a
+      // run that did not demonstrate one.
+      ...(allSame ? [consequenceCallout()] : []),
       disclosure(
         'For the expert: why they never diverge',
         el('p', {}, [
@@ -189,11 +229,14 @@ export function clonePanel(): HTMLElement {
 
   function showRestoredVerdict(): void {
     clear(verdictHost)
+    const noneSame = fieldsIdentical === 0
     verdictHost.append(
       el('p', { class: 'result-line' }, [
-        'Comparison after Server B’s fresh entropy: streams ',
-        el('span', { class: 'flag-neutral' }, ['DIVERGE']),
-        ' from the first block.',
+        `Comparison after Server B’s fresh entropy: ${fieldsIdentical} of ${fieldsCompared} fields match — streams `,
+        noneSame
+          ? el('span', { class: 'flag-neutral' }, ['DIVERGE'])
+          : el('span', { class: 'flag-alarm' }, ['STILL OVERLAP']),
+        noneSame ? ' from the first block.' : ' despite the reseed, which should not happen.',
       ]),
       indicatorPair(
         {
@@ -202,13 +245,21 @@ export function clonePanel(): HTMLElement {
           value: 'Same DRBG, same code',
           note: 'Nothing about the algorithm changed — only the input did.',
         },
-        {
-          state: 'intact',
-          label: 'Security verdict',
-          icon: '✓',
-          value: 'INTEGRITY RESTORED',
-          note: 'One unpredictable byte of reseed material breaks the shared future. That byte is the whole job of the entropy source.',
-        },
+        noneSame
+          ? {
+              state: 'intact',
+              label: 'Security verdict',
+              icon: '✓',
+              value: 'INTEGRITY RESTORED',
+              note: 'One unpredictable byte of reseed material breaks the shared future. That byte is the whole job of the entropy source.',
+            }
+          : {
+              state: 'collapsed',
+              label: 'Security verdict',
+              icon: '✗',
+              value: 'STILL SHARED',
+              note: 'Server B reseeded and its output still matched Server A. Nothing here is safe to conclude from that run.',
+            },
       ),
     )
   }

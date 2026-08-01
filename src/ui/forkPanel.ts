@@ -77,8 +77,10 @@ export function forkPanel(): HTMLElement {
     el('p', { class: 'fork-legend' }, [
       'In both child cards, highlighted bytes are the ones that ',
       el('em', {}, ['match']),
-      ' the parent’s output, and each output carries a match tally. A child that reseeded ' +
-        'should score 0; a child that did not will score every byte.',
+      ' the parent’s output, and each output carries a match tally. A child that did not reseed ' +
+        'scores every byte. A child that reseeded scores 0 or near it — its bytes are independent ' +
+        'of the parent’s, so each one still coincides by chance with probability 1 in 256, which ' +
+        'makes an occasional 1 or 2 expected rather than a failure.',
     ]),
   )
 
@@ -188,13 +190,23 @@ export function forkPanel(): HTMLElement {
           value: 'DRBG correct in every process',
           note: 'fork() copied a working generator faithfully. The duplication is the operating system’s, not the algorithm’s.',
         },
-        {
-          state: 'collapsed',
-          label: 'Security verdict',
-          icon: '✗',
-          value: 'CHILD SECRET PREDICTABLE',
-          note: 'The un-reseeded child will hand out the parent’s next nonce/key. Post-fork reseeding is a hard cryptographic requirement, not hygiene.',
-        },
+        // Read off the measured comparisons above, so a run in which the child did
+        // NOT reproduce the parent reports that instead of the expected headline.
+        inheritedCollides
+          ? {
+              state: 'collapsed',
+              label: 'Security verdict',
+              icon: '✗',
+              value: 'CHILD SECRET PREDICTABLE',
+              note: 'The un-reseeded child handed out the parent’s next nonce/key byte for byte. Post-fork reseeding is a hard cryptographic requirement, not hygiene.',
+            }
+          : {
+              state: 'intact',
+              label: 'Security verdict',
+              icon: '✓',
+              value: 'NO COLLISION OBSERVED',
+              note: 'The un-reseeded child did not reproduce the parent’s output in this run — the inheritance failure this panel exists to show did not occur.',
+            },
       ),
     )
   }
