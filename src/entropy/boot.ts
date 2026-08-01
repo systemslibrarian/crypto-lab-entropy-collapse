@@ -24,6 +24,13 @@ export const BOOT_PID_BITS = 11
  *  larger stops are left un-run precisely so the slider shows where safety begins. */
 export const ENUMERABLE_MAX_BITS = 16
 
+/** The modelled boot space is indexed by a JS 32-bit integer (the victim's secret index is
+ *  drawn from a uint32 and the enumeration walks `number` indices), so the largest space a
+ *  victim can honestly be drawn from is 2^31. Every non-`full` stop below is <= this, which
+ *  is what keeps the panel's "2^N possible seeds" readout the number actually in play: this
+ *  lab's whole subject is entropy claims that do not hold, so its own must. */
+export const MODEL_MAX_BITS = 31
+
 /** Discrete slider stops, high entropy first. `full` seeds from the real CSPRNG. */
 export interface EntropyStop {
   readonly bits: number
@@ -33,14 +40,21 @@ export interface EntropyStop {
 
 export const ENTROPY_STOPS: readonly EntropyStop[] = [
   { bits: 256, label: 'getrandom() — kernel CSPRNG, fully seeded', full: true },
-  { bits: 64, label: '64-bit seed — strong PRNG, small seed', full: false },
-  { bits: 40, label: 'millisecond clock + PID', full: false },
-  { bits: 32, label: '32-bit seed — second-resolution clock + PID', full: false },
+  { bits: 31, label: '31-bit seed — second-resolution clock + PID', full: false },
+  { bits: 28, label: 'millisecond clock, narrow boot window + PID', full: false },
   { bits: 24, label: 'coarse clock + PID (headless server)', full: false },
+  { bits: 20, label: 'minute-resolution clock + PID', full: false },
   { bits: 16, label: 'boot-time: near-fixed clock, PID-dominated', full: false },
   { bits: 14, label: 'embedded boot: almost no clock jitter', full: false },
   { bits: 12, label: 'PID-only-class seed (illustrative)', full: false },
 ]
+
+// Guard the invariant the readout depends on: nothing may be labelled that cannot be modelled.
+for (const stop of ENTROPY_STOPS) {
+  if (!stop.full && stop.bits > MODEL_MAX_BITS) {
+    throw new Error(`Entropy stop ${stop.bits} exceeds the modellable maximum 2^${MODEL_MAX_BITS}`)
+  }
+}
 
 export interface BootModel {
   /** 6-byte hardware address — PUBLIC, known to any attacker on the wire. */

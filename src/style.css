@@ -743,8 +743,28 @@ details.disclosure li {
   background-color: color-mix(in oklab, var(--accent) 32%, transparent);
   border-radius: 3px;
 }
+/* Explicit "N of M bytes match" tally, so identical-vs-different is a number the reader
+   can check rather than a colour density the eye has to integrate. */
+.byte-tally {
+  margin: 0.25rem 0 0;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.byte-tally[data-tone='alarm'] {
+  color: var(--danger-text);
+  font-weight: 600;
+}
+.byte-tally[data-tone='ok'] {
+  color: var(--ok-text);
+}
 
 /* ---------- Fork panel: a fork() tree ---------- */
+.fork-legend {
+  margin: -0.4rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
 .fork-tree {
   margin: 0.4rem 0 1rem;
 }

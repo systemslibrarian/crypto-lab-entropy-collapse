@@ -30,7 +30,9 @@ export function recoverSeed(
   model: BootModel,
   opts: RecoverOptions = {},
 ): RecoveryResult {
-  const space = model.unknownBits >= 31 ? Number.MAX_SAFE_INTEGER : 1 << model.unknownBits
+  // 2**bits, not 1 << bits: the shift is a signed 32-bit operation and would go negative
+  // at the ladder's top stop. The attacker searches exactly the space the panel advertises.
+  const space = 2 ** model.unknownBits
   const from = opts.from ?? 0
   const limit = Math.min(space, from + (opts.maxCandidates ?? space))
 

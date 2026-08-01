@@ -6,6 +6,7 @@ import { bytesToHex } from '../crypto/hex'
 import {
   ENTROPY_STOPS,
   ENUMERABLE_MAX_BITS,
+  MODEL_MAX_BITS,
   bootMaterial,
   decodeSecret,
   isEnumerable,
@@ -73,7 +74,10 @@ function makeVictim(stopIndex: number): Victim {
       sessionKey: sessionKeyFromSeed(seed),
     }
   }
-  const space = stop.bits >= 31 ? 2 ** 31 : 1 << stop.bits
+  // No clamp: every non-full stop is <= MODEL_MAX_BITS (31), so this IS the space the
+  // readout advertises. The secret is drawn uniformly from it — space is a power of two
+  // no larger than 2^31, so reducing a uint32 modulo it is exactly uniform.
+  const space = 2 ** stop.bits
   // A uniform true secret within the (possibly tiny) space the machine actually had.
   const r = new DataView(randomBytes(4).buffer).getUint32(0)
   const secretIndex = r % space
@@ -146,6 +150,7 @@ export function entropyPanel(): HTMLElement {
     if (bits >= 100) return 'unreachable by any computer that could ever be built'
     if (bits >= 64) return 'beyond practical brute force'
     if (bits >= 40) return 'years of dedicated compute to sweep'
+    if (bits >= 30) return 'days of sweeping on one laptop'
     if (bits >= 24) return 'minutes to hours on one laptop'
     return 'a sweep you can watch finish in this browser tab'
   }
@@ -190,6 +195,16 @@ export function entropyPanel(): HTMLElement {
         el('p', { class: 'result-line' }, [
           el('span', { class: 'flag-alarm' }, ['Small enough to enumerate live']),
           ` — about ${formatDuration(secs)} to sweep all ${keyspaceSize(stop.bits).toLocaleString('en-US')}.`,
+        ]),
+      )
+    }
+    if (!stop.full && stop.bits === MODEL_MAX_BITS) {
+      readout.append(
+        el('p', { style: 'margin:.3rem 0 0;color:var(--text-dim)' }, [
+          `The starved ladder stops at 2^${MODEL_MAX_BITS} because that is the largest space this ` +
+            'page can actually draw a victim from — the number above is always the number in play, ' +
+            'never a headline. Real seeds in the 40- to 64-bit range are still fatally weak against ' +
+            'a funded attacker; they are simply not a sweep a browser tab can honestly show you.',
         ]),
       )
     }
@@ -261,7 +276,7 @@ export function entropyPanel(): HTMLElement {
     clear(progressWrap)
 
     const model: BootModel = { mac: MAC, baseTimeSec: BASE_TIME, unknownBits: victim.bits }
-    const total = 1 << victim.bits
+    const total = 2 ** victim.bits
     const bar = el('span', {}) as HTMLElement
     const progress = el('div', { class: 'progress', role: 'presentation' }, [bar])
     const ticker = el('div', { class: 'ticker', 'aria-hidden': 'true' }, ['booting candidate machines…'])

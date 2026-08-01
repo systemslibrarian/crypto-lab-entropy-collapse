@@ -53,8 +53,9 @@ export function hexBlock(bytes: Uint8Array, other?: Uint8Array): HTMLElement {
 }
 
 /** Compare bytes to `other`, highlighting either the matching or the changed bytes in a
- *  calm (non-alarm) tone. Used by the clone panel, where "same" is the teaching point and
- *  "diverged" is the desirable outcome — so neither should read as danger-red. */
+ *  calm (non-alarm) tone. Used by the clone and fork panels, where "same" is the teaching
+ *  point and "diverged" is the desirable outcome — so neither should read as danger-red.
+ *  Callers pair this with an explicit match tally; colour density alone is not a count. */
 export function compareHexBlock(
   bytes: Uint8Array,
   other: Uint8Array,

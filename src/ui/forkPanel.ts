@@ -14,6 +14,30 @@ const SCRIPT = [
   { label: 'Next key (secret)', bytes: 32 },
 ]
 
+function countMatching(a: Uint8Array, b: Uint8Array): number {
+  let n = 0
+  for (let i = 0; i < a.length; i++) if (a[i] === b[i]) n++
+  return n
+}
+
+/**
+ * A child's output, compared against the parent's. Both children highlight the bytes that
+ * MATCH the parent, so the collision is the loud card and the reseeded child is the quiet
+ * one — and both carry an explicit "N of M bytes match" tally, so identical-vs-different is
+ * a number the reader can check rather than a colour density the eye has to integrate.
+ */
+function childOutput(out: Uint8Array, parentOut: Uint8Array): HTMLElement {
+  const same = countMatching(out, parentOut)
+  const identical = same === out.length
+  return el('div', {}, [
+    compareHexBlock(out, parentOut, 'match'),
+    el('p', { class: 'byte-tally', 'data-tone': identical ? 'alarm' : 'ok' }, [
+      `${same} of ${out.length} bytes match the parent`,
+      identical ? ' — the parent’s secret, byte for byte' : '',
+    ]),
+  ])
+}
+
 export function forkPanel(): HTMLElement {
   let forkState: DrbgState | null = null
   let childFresh = randomBytes(32)
@@ -49,6 +73,14 @@ export function forkPanel(): HTMLElement {
     el('div', { class: 'fork-children' }, [inheritedCard.root, reseededCard.root]),
   ])
   panel.append(tree)
+  panel.append(
+    el('p', { class: 'fork-legend' }, [
+      'In both child cards, highlighted bytes are the ones that ',
+      el('em', {}, ['match']),
+      ' the parent’s output, and each output carries a match tally. A child that reseeded ' +
+        'should score 0; a child that did not will score every byte.',
+    ]),
+  )
 
   const forkBtn = el('button', { class: 'action', type: 'button' }, ['Fork the process'])
   const stepBtn = el('button', { class: 'ghost', type: 'button' }, ['Step ▸'])
@@ -111,8 +143,8 @@ export function forkPanel(): HTMLElement {
     const outInh = inherited.generate(item.bytes)
     const outRes = reseeded.generate(item.bytes)
     parentCard.log(item.label, hexBlock(outP))
-    inheritedCard.log(item.label, compareHexBlock(outInh, outP, 'diff'))
-    reseededCard.log(item.label, compareHexBlock(outRes, outP, 'diff'))
+    inheritedCard.log(item.label, childOutput(outInh, outP))
+    reseededCard.log(item.label, childOutput(outRes, outP))
     stepIdx++
     renderState()
     if (/key/i.test(item.label)) showVerdict(bytesToHex(outInh) === bytesToHex(outP), bytesToHex(outRes) === bytesToHex(outP))
