@@ -152,6 +152,9 @@ export function entropyPanel(): HTMLElement {
     if (bits >= 40) return 'years of dedicated compute to sweep'
     if (bits >= 30) return 'days of sweeping on one laptop'
     if (bits >= 24) return 'minutes to hours on one laptop'
+    // Anything past the live-enumeration limit must not promise a sweep you can watch,
+    // because the line directly below it says the sweep is too long to run here.
+    if (bits > ENUMERABLE_MAX_BITS) return 'a few minutes on one laptop — just past what this tab will sit through'
     return 'a sweep you can watch finish in this browser tab'
   }
 
