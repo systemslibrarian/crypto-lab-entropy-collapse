@@ -90,7 +90,7 @@ npm install
 npm run dev        # http://localhost:5173
 npm test           # unit tests + KATs
 npm run build      # type-check + production bundle
-npm run test:a11y  # axe-core WCAG A/AA gate (both themes) against the built site
+npm run test:a11y  # browser gates against the built site: functional claims + axe WCAG A/AA
 ```
 
 ## Related Demos
@@ -114,8 +114,18 @@ npm run test:a11y  # axe-core WCAG A/AA gate (both themes) against the built sit
   - **4 SHA-256 KATs** (FIPS 180-4) and **4 HMAC-SHA256 KATs** (RFC 4231).
   - Behavioural invariants: deterministic-in-seed, clone byte-equality, fork inheritance,
     no-op-reseed predictability, and live seed recovery against the real DRBG.
+- **Functional browser gate (12 Playwright specs, `e2e/claims.spec.ts`):** drives the built
+  page in Chromium and asserts what it claims — that both restored servers log byte-identical
+  output and that the "N of M IDENTICAL" tally is that comparison; that Server B's fresh
+  entropy diverges every field; that each fork child's "N of M bytes match" tally equals the
+  hex printed beside it; that a no-op reseed keeps the attacker in lockstep while the health
+  counter reads exactly as fresh as a proper reseed's; that every slider stop's keyspace,
+  meter and sweep-time agree at the quoted 10,000 candidates/second; and that the seed the
+  brute force recovers is **SHA-256 of the boot material the page published**, found at the
+  guess index its own boot-time/PID readout implies.
 - **Accessibility gate:** `@axe-core/playwright` scans the production build for zero WCAG
-  2.1 A/AA violations in **both** themes; the GitHub Pages deploy is blocked if it fails.
+  2.1 A/AA violations in **both** themes; the GitHub Pages deploy is blocked if either
+  browser gate fails.
 
 ```bash
 npm test && npm run build && npm run test:a11y

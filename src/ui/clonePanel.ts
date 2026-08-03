@@ -96,6 +96,11 @@ export function clonePanel(): HTMLElement {
     stepIdx = 0
     fieldsCompared = 0
     fieldsIdentical = 0
+    // A finished run disables Step/Auto-run at the end of the script. Restoring rewinds
+    // the script, so they must be re-armed here — otherwise the line below tells the
+    // reader to "press Step" while Step is permanently dead.
+    stepBtn.disabled = false
+    autoBtn.disabled = false
     machineA.clearLog()
     machineB.clearLog()
     clear(live)

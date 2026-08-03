@@ -297,9 +297,16 @@ export function entropyPanel(): HTMLElement {
 
       if (res.found) {
         const secs = (performance.now() - t0) / 1000
+        const tried = from + res.tried
         bar.style.width = '100%'
         ticker.textContent = ''
-        renderSuccess(res.seed!, res.sessionKey!, res.secretIndex, from + res.tried, secs)
+        // The progress label holds whatever the LAST COMPLETED batch wrote, so leaving it
+        // alone strands it on that batch's count ("Tried 7,168 … 44%") while the result
+        // line below reports the real number of guesses — two different tallies of the
+        // same sweep on screen at once. State the final count instead.
+        pctLabel.textContent =
+          `Tried ${tried.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} seeds — match found.`
+        renderSuccess(res.seed!, res.sessionKey!, res.secretIndex, tried, secs)
         running = false
         updateButtons()
         return

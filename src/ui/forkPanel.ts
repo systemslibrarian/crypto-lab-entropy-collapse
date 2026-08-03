@@ -120,6 +120,11 @@ export function forkPanel(): HTMLElement {
     reseeded = HmacDrbg.fromSnapshot(forkState)
     reseeded.reseed(childFresh) // the safe child mixes in machine-unique entropy
     stepIdx = 0
+    // Re-arm the controls: a completed run disables them at the end of the script, and
+    // forking again rewinds it. Without this, "Step to compare their output" below points
+    // at a button that can never be pressed again.
+    stepBtn.disabled = false
+    autoBtn.disabled = false
     parentCard.clearLog()
     inheritedCard.clearLog()
     reseededCard.clearLog()
