@@ -349,7 +349,14 @@ export function entropyPanel(): HTMLElement {
     const bootDate = new Date((BASE_TIME + timeOffset) * 1000).toISOString().replace('.000Z', 'Z')
     result.append(
       el('div', { class: 'cracked' }, [
-        el('span', { class: 'cracked-tag', 'aria-hidden': 'true' }, ['🔓 SEED CRACKED']),
+        // Only the padlock is hidden. `aria-hidden` used to wrap the whole span,
+        // which removed the words "SEED CRACKED" — the headline of this chapter's
+        // result, and the only place the word appears — from the accessibility
+        // tree entirely, and from both contrast oracles with it.
+        el('span', { class: 'cracked-tag' }, [
+          el('span', { 'aria-hidden': 'true' }, ['🔓 ']),
+          'SEED CRACKED',
+        ]),
         el('span', {}, [`This machine booted at ${bootDate} as PID ${pid}.`]),
       ]),
       el('p', { class: 'result-line' }, [

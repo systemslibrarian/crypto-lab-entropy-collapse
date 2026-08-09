@@ -7,7 +7,11 @@
   --bg: #15120b;
   --panel: #201b12;
   --panel-2: #2a2417;
-  --border: #423a27;
+  --border: #423a27; /* SURFACE divider only — 1.52:1 on --panel, never a control edge */
+  /* The boundary of every interactive control (SC 1.4.11). Measured against each
+     surface a control actually lands on: --panel 3.90:1, --panel-2 3.51:1 (the
+     tightest — it is button.ghost's own :hover fill) and --bg 4.26:1. */
+  --control-border: #867754;
   --text: #f4efe4;
   --text-dim: #cdc5b4;
   --text-muted: #a89e89;
@@ -37,7 +41,11 @@
   --bg: #f7f3ea;
   --panel: #fffdf8;
   --panel-2: #f0e9da;
-  --border: #d9cfb8;
+  --border: #d9cfb8; /* SURFACE divider only — 1.52:1 on --panel, never a control edge */
+  /* The boundary of every interactive control (SC 1.4.11). Measured against each
+     surface a control actually lands on: --panel 4.34:1, --panel-2 3.65:1 (the
+     tightest — it is button.ghost's own :hover fill) and --bg 3.98:1. */
+  --control-border: #847758;
   --text: #241f16;
   --text-dim: #4a4234;
   --text-muted: #5f5644;
@@ -84,7 +92,15 @@ body {
   margin: 0 auto;
   padding: 0 clamp(1rem, 4vw, 2rem) 3rem;
 }
-#app p {
+:where(#app) p {
+  /* `:where()` so this stays an element-level DEFAULT. Written as `#app p` it was
+     specificity (1,0,1) and silently beat every class rule on a paragraph —
+     `.panel-lede`, `.intro p`, `.not-this`, `.throughline p`, `.fork-legend`,
+     `.result-line`, `.ind-note` and `.byte-tally[data-tone='alarm']` all resolved
+     to --text instead of the token they asked for, including the fork panel's
+     danger-toned match tally. `:where()` contributes zero specificity, so the
+     selector is (0,0,1): still scoped to #app, so the always-dark top bar and the
+     footer are untouched, but now every class rule wins as written. */
   color: var(--text);
 }
 #app a {
@@ -382,7 +398,13 @@ button.action:disabled {
 button.ghost {
   background-color: transparent;
   color: var(--text);
-  border: 1px solid var(--border);
+  /* --control-border, not --border. A transparent fill delineates nothing, so this
+     border IS the control, and --border is the surface-divider token: it measured
+     1.52:1 against --panel at rest, and 1.37:1 dark / 1.28:1 light against the
+     --panel-2 fill this button takes on :hover — i.e. the boundary got WORSE the
+     moment a pointer was on it. Every secondary control in the lab is a .ghost,
+     including the four in the guided-tour bar. */
+  border: 1px solid var(--control-border);
   border-radius: 8px;
   padding: 0.55rem 1rem;
   min-height: 44px; /* touch target */
@@ -410,7 +432,7 @@ select {
   -webkit-appearance: none;
   background-color: var(--panel-2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border); /* control boundary, per SC 1.4.11 */
   border-radius: 8px;
   padding: 0.45rem 2rem 0.45rem 0.7rem;
   font: inherit;
