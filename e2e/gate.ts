@@ -712,15 +712,26 @@ export function expectBaselineNotStale(): void {
 export async function scan(page: Page, label: string): Promise<void> {
   await settle(page);
   await expectNotBlank(page, label);
-  const results = await new AxeBuilder({ page })
-    .withTags(TAGS)
-    // These four are axe "best-practice" rules rather than WCAG-tagged ones, so
-    // `withTags` alone does not run them. This page is exactly the shape they
-    // catch: a shared sticky <header role="banner"> above a <main id="app"> that
-    // `main.ts` fills with a second <header class="cl-hero"> containing an
-    // <aside class="cl-hero-why">, plus a third landmark — the guided tour's
-    // <div role="region" aria-label="Guided tour"> — appended straight to
-    // <body>. None of the four was enabled before.
+  // TWO axe runs, deliberately, and this is not a style choice.
+  //
+  // `AxeBuilder.withTags()` and `AxeBuilder.withRules()` both write `runOnly`,
+  // so the second call SILENTLY REPLACES the first — the axe-core/playwright
+  // source says so in as many words ("Cannot be used with AxeBuilder#withTags").
+  // Chained as `.withTags(TAGS).withRules([...4 landmark rules])`, which is the
+  // form this gate shipped with, axe therefore ran those four best-practice
+  // rules and NOT ONE WCAG RULE: measured through this gate's own path, the
+  // chained form executes 4 rules where `withTags` alone executes 63. A green
+  // result meant "no duplicate landmarks", and nothing whatsoever about WCAG
+  // A/AA — while reading exactly like a full pass. Running the two sets
+  // separately and merging is the only way to have both; the landmark four are
+  // wanted because they are best-practice rather than WCAG-tagged, so
+  // `withTags` alone does not reach them, and this page is exactly the shape
+  // they catch: a shared sticky <header role="banner"> above a <main id="app">
+  // that `main.ts` fills with a second <header class="cl-hero"> containing an
+  // <aside class="cl-hero-why">, plus a third landmark — the guided tour's
+  // <div role="region" aria-label="Guided tour"> — appended straight to <body>.
+  const wcag = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  const landmarks = await new AxeBuilder({ page })
     .withRules([
       'landmark-no-duplicate-banner',
       'landmark-unique',
@@ -728,6 +739,10 @@ export async function scan(page: Page, label: string): Promise<void> {
       'landmark-complementary-is-top-level',
     ])
     .analyze();
+  const results = {
+    violations: [...wcag.violations, ...landmarks.violations],
+    incomplete: [...wcag.incomplete, ...landmarks.incomplete],
+  };
 
   const violations = results.violations.map((v) => ({
     state: label,
