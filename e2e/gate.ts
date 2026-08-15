@@ -249,15 +249,9 @@ export const ENTROPY_STOPS = [
  * turn every auto-run in the drive into a race against a wall clock, and a
  * flake there would look like a defect.
  *
- * The theme is seeded through `localStorage` rather than by clicking the toggle,
- * which also pins down a real failure mode: `index.html`'s anti-flash script
- * reads `localStorage.getItem('theme')` and the toggle writes
- * `localStorage.setItem('theme', …)`. If those keys drift apart the theme
- * silently stops persisting, and this boot fails on `data-theme` rather than
- * quietly scanning dark twice. (They agree today — both are `'theme'` — which
- * was checked, not assumed.) The gate this replaces did not even use the toggle:
- * it called `setAttribute('data-theme', 'light')` from script when the toggle
- * was absent, so a broken toggle and a broken key would both have scanned green.
+ * Dark is the only theme: `index.html`'s anti-flash script pins `data-theme` to
+ * it before first paint and there is no toggle to reach anything else, so this
+ * boot asserts the attribute rather than seeding a preference.
  *
  * The defaults are asserted at length because three of the five chapters ship
  * COMPLETELY EMPTY — no snapshot, no fork, no timeline — and the fourth ships

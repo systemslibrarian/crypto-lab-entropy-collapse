@@ -61,7 +61,7 @@ and two machines become one; starve it and its entire output becomes guessable.
 `main` via GitHub Pages). You can: run the clone and watch both streams stay identical,
 diverge Server B with fresh entropy, drag the entropy slider and brute-force a real seed,
 fork a process, and toggle a proper vs. no-op reseed — each with its own crypto-result and
-security-verdict indicators, in dark or light theme.
+security-verdict indicators.
 
 ## What Can Go Wrong
 
