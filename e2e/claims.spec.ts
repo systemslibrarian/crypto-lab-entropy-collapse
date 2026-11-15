@@ -407,7 +407,7 @@ test('reseed: a proper reseed diverges the attacker — with an identical health
   await expect(live).toContainText('DIVERGES')
   const verdict = reseed.locator('.indicator.verdict')
   await expect(verdict).toHaveAttribute('data-state', 'intact')
-  await expect(verdict).toContainText('FORWARD SECRECY RESTORED')
+  await expect(verdict).toContainText('PREDICTION RESISTANCE RESTORED')
 
   // The whole point of the panel: the counter cannot tell the two runs apart.
   expect(proper.counter).toBe(noop.counter)

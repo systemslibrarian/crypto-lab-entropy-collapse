@@ -167,7 +167,7 @@ export function reseedPanel(): HTMLElement {
               state: 'intact',
               label: 'Security verdict',
               icon: '✓',
-              value: 'FORWARD SECRECY RESTORED',
+              value: 'PREDICTION RESISTANCE RESTORED',
               note: 'Fresh, attacker-unknown entropy entered the state. The old snapshot no longer predicts the output.',
             },
       ),

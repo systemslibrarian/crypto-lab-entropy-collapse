@@ -1052,7 +1052,7 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await expect(page.locator('#reseed .health')).toContainText('reseed_counter');
   await expect(page.locator('#reseed .indicator.verdict')).toHaveAttribute('data-state', 'intact');
   await expect(page.locator('#reseed .indicator.verdict')).toContainText(
-    'FORWARD SECRECY RESTORED'
+    'PREDICTION RESISTANCE RESTORED'
   );
   await settle(page);
   await scanAt('reseed: a proper reseed — the attacker loses track, both block tones on screen');
