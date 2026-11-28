@@ -107,6 +107,8 @@ npm run test:a11y  # browser gates against the built site: functional claims + a
 
 ## Build & Verify
 
+The eight HMAC_DRBG known-answer tests supply fixed inputs and compare the generator’s output against published bytes. There are two cases for each combination of personalization and additional input. These tests check the deterministic mechanism under the covered conditions. Assessing the unpredictability of the original noise source requires evidence about the source itself. [Generator tests](https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/random-number-generators) and [NIST SP 800-90B](https://csrc.nist.gov/pubs/sp/800/90/b/final).
+
 - **34 unit tests (Vitest), all passing**, including:
   - **8 NIST CAVP HMAC_DRBG (SHA-256) known-answer vectors** — all four
     personalization × additional-input option groups, each with reseed
